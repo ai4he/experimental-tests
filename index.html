@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Duodecimal VM</title>
+</head>
+<body>
+    <h1>Duodecimal VM Test</h1>
+    <button onclick="runBenchmark()">Run Benchmarks</button>
+    <button onclick="runAssemblyExample()">Run Assembly Example</button>
+    <button onclick="runTuneWeights()">Tune Weights Example</button>
+    <button onclick="runEvaluateDrift()">Evaluate Drift Example</button>
+    <pre id="output"></pre>
+
+    <script type="module">
+        import init, { add, run_assembly, evaluate_without_middleware, evaluate_with_middleware, tune_weights, evaluate_drift } from './pkg/duodecimal_vm.js';
+
+        let initialized = false;
+        async function ensureInit() {
+            if (!initialized) {
+                await init();
+                initialized = true;
+            }
+        }
+
+        async function runBenchmark() {
+            await ensureInit();
+            const timeWithout = await evaluate_without_middleware();
+            const timeWith = await evaluate_with_middleware();
+            document.getElementById('output').innerText = `Without middleware: ${timeWithout} ms\nWith middleware: ${timeWith} ms`;
+        }
+
+        async function runAssemblyExample() {
+            await ensureInit();
+            const assembly = `
+mov r0, 12
+mov r1, A
+add r0, r1
+halt
+            `;
+            const result = await run_assembly(assembly.trim());
+            document.getElementById('output').innerText = `Result: ${result}`;  // Should output "20" (base-12 for 24 decimal)
+        }
+
+        async function runTuneWeights() {
+            await ensureInit();
+            const weights = [0.333, 0.666, 1.0];  // Sample weights with potential fractional issues
+            const scale = 4;  // Fractional precision
+            const tuned = await tune_weights(weights, scale);
+            document.getElementById('output').innerText = `Original: ${weights}\nTuned: ${tuned}`;
+        }
+
+        async function runEvaluateDrift() {
+            await ensureInit();
+            const weights = [0.333, 0.666, 1.0];
+            const iterations = 100;
+            const scale = 4;
+            const timeWithout = await evaluate_drift(weights, iterations, scale, false);
+            const timeWith = await evaluate_drift(weights, iterations, scale, true);
+            document.getElementById('output').innerText = `Drift without tuning: ${timeWithout} ms\nDrift with tuning: ${timeWith} ms`;
+        }
+
+        // Attach to window for onclick
+        window.runBenchmark = runBenchmark;
+        window.runAssemblyExample = runAssemblyExample;
+        window.runTuneWeights = runTuneWeights;
+        window.runEvaluateDrift = runEvaluateDrift;
+
+        // Optional: Test add function
+        async function testAdd() {
+            await ensureInit();
+            const sum = await add("12", "A");  // 14 + 10 decimal = 24 decimal = "20" base-12
+            console.log(sum);
+        }
+        testAdd();
+    </script>
+</body>
+</html>
