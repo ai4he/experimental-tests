@@ -1,0 +1,15 @@
+{
+  "name": "duodecimal-vm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "duodecimal_vm_bg.wasm",
+    "duodecimal_vm.js",
+    "duodecimal_vm.d.ts"
+  ],
+  "main": "duodecimal_vm.js",
+  "types": "duodecimal_vm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
